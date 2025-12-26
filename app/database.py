@@ -5,12 +5,14 @@ from pgvector.sqlalchemy import Vector
 
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 if not DATABASE_URL:
-    DATABASE_URL = "postgresql://dupe_admin:password123@localhost:5432/dupe_db"
+    raise RuntimeError("DATABASE_URL is not set. In Railway set it to ${{ pgvector.DATABASE_URL }} on the backend service.")
 
+# Railway may give postgres://; SQLAlchemy needs postgresql://
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-if "sslmode=" not in DATABASE_URL and "localhost" not in DATABASE_URL:
+# Enforce SSL in cloud
+if "sslmode=" not in DATABASE_URL:
     sep = "&" if "?" in DATABASE_URL else "?"
     DATABASE_URL = f"{DATABASE_URL}{sep}sslmode=require"
 
@@ -35,10 +37,8 @@ class Product(Base):
     embedding = Column(Vector(512))
 
 def init_db() -> None:
+    # Ensure pgvector and tables exist
     with engine.connect() as conn:
-        try:
-            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-        except Exception:
-            pass
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
         conn.commit()
     Base.metadata.create_all(bind=engine)
