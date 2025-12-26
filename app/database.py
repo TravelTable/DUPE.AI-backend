@@ -7,14 +7,16 @@ DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is not set. In Railway set it to ${{ pgvector.DATABASE_URL }} on the backend service.")
 
-# Railway may give postgres://; SQLAlchemy needs postgresql://
+# SQLAlchemy needs postgresql://
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Enforce SSL in cloud
-if "sslmode=" not in DATABASE_URL:
+# Optional SSL control via env (don't force it by default).
+# Set DB_SSLMODE=disable if your instance rejects SSL (your case).
+sslmode = os.getenv("DB_SSLMODE", "").strip().lower()
+if sslmode and "sslmode=" not in DATABASE_URL:
     sep = "&" if "?" in DATABASE_URL else "?"
-    DATABASE_URL = f"{DATABASE_URL}{sep}sslmode=require"
+    DATABASE_URL = f"{DATABASE_URL}{sep}sslmode={sslmode}"
 
 engine = create_engine(
     DATABASE_URL,
@@ -37,8 +39,8 @@ class Product(Base):
     embedding = Column(Vector(512))
 
 def init_db() -> None:
-    # Ensure pgvector and tables exist
     with engine.connect() as conn:
+        # safe even if already installed
         conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
         conn.commit()
     Base.metadata.create_all(bind=engine)
