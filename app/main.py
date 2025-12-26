@@ -1,12 +1,11 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import RedirectResponse
 from sqlalchemy import text
-from app.database import engine as db_engine, SessionLocal, init_db
+from app.database import init_db, SessionLocal, Product
+import random
 
 app = FastAPI(title="DUPE.AI Backend", version="0.1.0")
 
-# Allow your iOS app / local dev origins as needed
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # tighten later
@@ -17,27 +16,55 @@ app.add_middleware(
 
 @app.on_event("startup")
 def _startup():
-    # Ensure DB + pgvector are ready and tables exist
     init_db()
-
-@app.get("/", include_in_schema=False)
-def root():
-    return RedirectResponse(url="/docs", status_code=302)
 
 @app.get("/_health")
 def health():
-    # Check DB connectivity and 'vector' extension presence
-    with db_engine.connect() as conn:
-        conn.execute(text("SELECT 1;"))
-        # if this errors, extension isn't there
-        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-    return {"ok": True}
+    # Checks DB connectivity + pgvector
+    db = SessionLocal()
+    try:
+        db.execute(text("SELECT 1"))
+        db.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        return {"ok": True}
+    finally:
+        db.close()
 
-@app.post("/scan")
-async def scan_look(file: UploadFile = File(...)):
-    # Temp stub so we can verify uploads work end-to-end on Railway
-    name = file.filename
-    size = 0
-    async for chunk in file.stream():
-        size += len(chunk)
-    return {"received": name, "bytes": size}
+@app.post("/_seed_minimal")
+def seed_minimal():
+    """
+    Cloud-only sanity seed: inserts 3 products with random 512-d vectors.
+    This verifies pgvector + schema without heavy model downloads yet.
+    """
+    db = SessionLocal()
+    try:
+        def rand_vec():
+            return [random.random() for _ in range(512)]
+
+        items = [
+            dict(name="Streetwear Leather Jacket", brand="Zara Dupe", price=89.99,
+                 image_url="https://images.unsplash.com/photo-1551028919-38f4287c23f9",
+                 buy_url="https://zara.com", embedding=rand_vec()),
+            dict(name="Beige Trench Coat", brand="Burberry Original", price=2400.00,
+                 image_url="https://images.unsplash.com/photo-1591047139829-d91aecb6caea",
+                 buy_url="https://burberry.com", embedding=rand_vec()),
+            dict(name="Casual Denim Jacket", brand="H&M", price=49.99,
+                 image_url="https://images.unsplash.com/photo-1576871337622-98d48d1cf531",
+                 buy_url="https://hm.com", embedding=rand_vec()),
+        ]
+
+        for it in items:
+            db.add(Product(**it))
+        db.commit()
+        count = db.execute(text("SELECT COUNT(*) FROM products")).scalar()
+        return {"seeded": 3, "total_products": int(count)}
+    finally:
+        db.close()
+
+@app.get("/_tables")
+def tables():
+    db = SessionLocal()
+    try:
+        rows = db.execute(text("SELECT tablename FROM pg_tables WHERE schemaname='public';")).fetchall()
+        return {"tables": [r[0] for r in rows]}
+    finally:
+        db.close()
