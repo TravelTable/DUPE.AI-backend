@@ -61,3 +61,5 @@ ultralytics==8.3.241
 ultralytics-thop==2.0.18
 urllib3==2.6.2
 uvicorn==0.40.0
+redis==5.0.8
+
