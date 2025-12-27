@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, Body, Request, HTTPException
+from loguru import logger
 from app.database import SessionLocal
 from app.services.embedding import image_bytes_to_vec, image_url_to_vec
 from app.services.search import top_matches
@@ -16,7 +17,14 @@ def search_url(req: Request, image_url: str = Body(..., embed=True)):
         raise HTTPException(status_code=429, detail="rate limit")
     db = SessionLocal()
     try:
-        vec = image_url_to_vec(image_url)
+        try:
+            vec = image_url_to_vec(image_url)
+        except ValueError as exc:
+            logger.warning("search/url invalid image: {}", exc)
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except Exception as exc:
+            logger.exception("search/url embedding failure")
+            raise HTTPException(status_code=500, detail="embedding failed") from exc
         matches = top_matches(db, vec, n=5)
         return {"matches": matches}
     finally:
@@ -29,7 +37,14 @@ async def search_file(req: Request, file: UploadFile = File(...)):
     b = await file.read()
     db = SessionLocal()
     try:
-        vec = image_bytes_to_vec(b)
+        try:
+            vec = image_bytes_to_vec(b)
+        except ValueError as exc:
+            logger.warning("search/file invalid image: {}", exc)
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except Exception as exc:
+            logger.exception("search/file embedding failure")
+            raise HTTPException(status_code=500, detail="embedding failed") from exc
         matches = top_matches(db, vec, n=5)
         return {"matches": matches}
     finally:

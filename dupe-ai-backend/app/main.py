@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.logging_conf import setup_logging
 from app.config import settings
 from app.database import init_db
+from app.services import embedding
 from app.routers import health, search, products, iap
 
 setup_logging(settings.LOG_LEVEL)
@@ -20,6 +21,11 @@ app.add_middleware(
 @app.on_event("startup")
 def _startup():
     init_db()
+    try:
+        embedding._load()
+    except Exception:
+        from loguru import logger
+        logger.exception("Failed to preload Fashion-CLIP model")
 
 app.include_router(health.router)
 app.include_router(search.router)

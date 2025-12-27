@@ -2,6 +2,7 @@ import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from app.config import settings
+from loguru import logger
 
 db_url = settings.DATABASE_URL
 if not db_url:
@@ -32,3 +33,15 @@ def init_db() -> None:
         conn.commit()
     from app import models  # import to register models
     Base.metadata.create_all(bind=engine)
+    with engine.connect() as conn:
+        try:
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS products_embedding_idx "
+                    "ON products USING ivfflat (embedding vector_l2_ops) "
+                    "WITH (lists = 100);"
+                )
+            )
+            conn.commit()
+        except Exception:
+            logger.exception("Failed to create pgvector index on products.embedding")
