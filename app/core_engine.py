@@ -1,11 +1,12 @@
 import torch
+from loguru import logger
 from PIL import Image
 from ultralytics import YOLO
 from transformers import CLIPProcessor, CLIPModel
 
 class DupeEngine:
     def __init__(self):
-        print("⚡ Loading DUPE.AI Models... (First run takes time)")
+        logger.info("Loading DUPE.AI models (first run takes time).")
         
         # 1. The Cutter: YOLOv8 (Small version for speed)
         # It will auto-download 'yolov8n-seg.pt'
@@ -16,7 +17,7 @@ class DupeEngine:
         self.processor = CLIPProcessor.from_pretrained(model_id)
         self.model = CLIPModel.from_pretrained(model_id)
         
-        print("✅ Models Loaded.")
+        logger.info("DUPE.AI models loaded.")
 
     def cut_clothes(self, image_path):
         """Detects items, crops them, returns list of images."""
