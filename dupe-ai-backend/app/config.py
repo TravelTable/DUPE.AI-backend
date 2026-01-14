@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     # Redis / Celery
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
+    # External APIs
+    SERPAPI_KEY: str = os.getenv("SERPAPI_KEY", "")
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    CLOUDINARY_URL: str = os.getenv("CLOUDINARY_URL", "")
+
     # IAP / Apple (server-side verification; wire later)
     APPSTORE_ISSUER_ID: str = os.getenv("APPSTORE_ISSUER_ID", "")
     APPSTORE_KEY_ID: str = os.getenv("APPSTORE_KEY_ID", "")
