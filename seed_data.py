@@ -60,43 +60,6 @@ SEED_ITEMS = [
         "image_url": "https://images.unsplash.com/photo-1551028919-38f4287c23f9?auto=format&fit=crop&w=800&q=80",
         "buy_url": "https://rickowens.eu",
     },
-    {
-        "name": "Faux Leather Biker Jacket",
-        "brand": "Zara (The Steal)",
-        "price": 89.90,
-        "image_url": "https://images.unsplash.com/photo-1520975661595-dc998ddbe94f?auto=format&fit=crop&w=800&q=80",
-        "buy_url": "https://zara.com",
-    },
-    # Designer Bag
-    {
-        "name": "Hermès Birkin 30",
-        "brand": "Hermès (The Dream)",
-        "price": 12000.00,
-        "image_url": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
-        "buy_url": "https://hermes.com",
-    },
-    {
-        "name": "Top Handle Structured Bag",
-        "brand": "H&M (The Steal)",
-        "price": 39.99,
-        "image_url": "https://images.unsplash.com/photo-1591561954557-26941169b49e?auto=format&fit=crop&w=800&q=80",
-        "buy_url": "https://hm.com",
-    },
-    # Sneakers
-    {
-        "name": "Balenciaga Triple S",
-        "brand": "Balenciaga (The Dream)",
-        "price": 1150.00,
-        "image_url": "https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?auto=format&fit=crop&w=800&q=80",
-        "buy_url": "https://balenciaga.com",
-    },
-    {
-        "name": "Chunky Sole Dad Sneaker",
-        "brand": "ASOS Design (The Steal)",
-        "price": 45.00,
-        "image_url": "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=800&q=80",
-        "buy_url": "https://asos.com",
-    },
 ]
 
 

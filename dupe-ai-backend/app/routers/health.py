@@ -35,17 +35,11 @@ def seed_minimal():
             dict(source="seed", name="Streetwear Leather Jacket", brand="Zara Dupe", price=89.99,
                  image_url="https://images.unsplash.com/photo-1551028919-38f4287c23f9",
                  buy_url="https://zara.com", embedding=rand_vec()),
-            dict(source="seed", name="Beige Trench Coat", brand="Burberry Original", price=2400.00,
-                 image_url="https://images.unsplash.com/photo-1591047139829-d91aecb6caea",
-                 buy_url="https://burberry.com", embedding=rand_vec()),
-            dict(source="seed", name="Casual Denim Jacket", brand="H&M", price=49.99,
-                 image_url="https://images.unsplash.com/photo-1576871337622-98d48d1cf531",
-                 buy_url="https://hm.com", embedding=rand_vec()),
         ]
 
         for it in items:
             db.add(Product(**it))
         db.commit()
-        return {"seeded": 3, "total_products": db.query(Product).count()}
+        return {"seeded": len(items), "total_products": db.query(Product).count()}
     finally:
         db.close()

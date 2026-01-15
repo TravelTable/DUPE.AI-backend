@@ -15,23 +15,24 @@ def _ip(req: Request) -> str:
     return req.headers.get("x-forwarded-for", req.client.host or "unknown").split(",")[0].strip()
 
 @router.post("/url", response_model=SearchResponse)
-def search_url(req: Request, image_url: str = Body(..., embed=True)):
+async def search_url(req: Request, image_url: str = Body(..., embed=True)):
     if not token_bucket(f"rl:url:{_ip(req)}", limit=20, window_sec=60):
         raise HTTPException(status_code=429, detail="rate limit")
-    db = SessionLocal()
+    
     try:
+        # Search web for replicas directly
+        web_matches = await search_by_image(image_url)
+        
+        # AI Analysis (OpenAI)
         try:
-            vec = image_url_to_vec(image_url)
-        except ValueError as exc:
-            logger.warning("search/url invalid image: {}", exc)
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
+            web_matches = await analyze_product_similarity(image_url, web_matches)
         except Exception as exc:
-            logger.exception("search/url embedding failure")
-            raise HTTPException(status_code=500, detail="embedding failed") from exc
-        matches = top_matches(db, vec, n=5)
-        return {"matches": matches}
-    finally:
-        db.close()
+            logger.exception("AI analysis failed")
+            
+        return {"matches": web_matches}
+    except Exception as exc:
+        logger.exception("search/url failure")
+        raise HTTPException(status_code=500, detail="search failed") from exc
 
 @router.post("/file", response_model=SearchResponse)
 async def search_file(req: Request, file: UploadFile = File(...)):
@@ -39,18 +40,9 @@ async def search_file(req: Request, file: UploadFile = File(...)):
         raise HTTPException(status_code=429, detail="rate limit")
     
     b = await file.read()
-    db = SessionLocal()
     
     try:
-        # 1. Local Vector Search (pgvector)
-        try:
-            vec = image_bytes_to_vec(b)
-            local_matches = top_matches(db, vec, n=5)
-        except Exception as exc:
-            logger.exception("Local search failed")
-            local_matches = []
-
-        # 2. Web/Replica Search (SerpApi + Cloudinary)
+        # 1. Web/Replica Search (SerpApi + Cloudinary)
         web_matches = []
         try:
             # Upload to Cloudinary to get a URL for SerpApi
@@ -59,15 +51,16 @@ async def search_file(req: Request, file: UploadFile = File(...)):
             web_matches = await search_by_image(image_url)
         except Exception as exc:
             logger.exception("Web search failed")
+            raise HTTPException(status_code=500, detail="web search failed") from exc
 
-        # 3. AI Analysis (OpenAI)
-        all_matches = local_matches + web_matches
+        # 2. AI Analysis (OpenAI)
         try:
-            if web_matches and 'image_url' in locals():
-                all_matches = await analyze_product_similarity(image_url, all_matches)
+            if web_matches:
+                web_matches = await analyze_product_similarity(image_url, web_matches)
         except Exception as exc:
             logger.exception("AI analysis failed")
 
-        return {"matches": all_matches}
-    finally:
-        db.close()
+        return {"matches": web_matches}
+    except Exception as exc:
+        logger.exception("search/file failure")
+        raise HTTPException(status_code=500, detail="search failed") from exc
