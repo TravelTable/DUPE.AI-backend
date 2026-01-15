@@ -15,8 +15,18 @@ async def analyze_product_similarity(original_image_url: str, candidate_products
     # For now, we'll simulate adding a 'style_tip' to each product.
     
     for product in candidate_products:
-        product["style_tip"] = f"This {product.get('name', 'item')} is a great match for your style. Pair it with neutral tones for a clean look."
-        product["similarity_score"] = 0.95 # Simulated score
+        name = product.get('name', '').lower()
+        if 'jacket' in name or 'coat' in name:
+            product["style_tip"] = "Layer this over a slim-fit turtleneck for a sophisticated winter silhouette."
+        elif 'bag' in name or 'handbag' in name:
+            product["style_tip"] = "The structured shape makes this perfect for both office wear and evening events."
+        elif 'sneaker' in name or 'shoe' in name:
+            product["style_tip"] = "Style these with cropped trousers to highlight the unique silhouette."
+        else:
+            product["style_tip"] = "A versatile piece that works perfectly for creating a high-low fashion statement."
+        
+        product["score"] = product.get("score", 0.92)
+        product["similarity_score"] = 0.92
         
     return candidate_products
 

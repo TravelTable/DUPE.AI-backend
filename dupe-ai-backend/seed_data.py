@@ -18,33 +18,7 @@ def _build_engine():
         db_url = f"{db_url}{sep}sslmode={sslmode}"
     return create_engine(db_url, pool_pre_ping=True)
 
-SAMPLES = [
-    # Dream/Steal pairs
-    dict(name="Rick Owens Bauhaus Leather Jacket", brand="Rick Owens (Dream)", category="jacket",
-         price=4200.00, currency="USD",
-         image_url="https://images.unsplash.com/photo-1551028919-38f4287c23f9?auto=format&fit=crop&w=800&q=80",
-         buy_url="https://rickowens.eu"),
-    dict(name="Faux Leather Biker Jacket", brand="Zara (Steal)", category="jacket",
-         price=89.90, currency="USD",
-         image_url="https://images.unsplash.com/photo-1520975661595-dc998ddbe94f?auto=format&fit=crop&w=800&q=80",
-         buy_url="https://zara.com"),
-    dict(name="Hermès Birkin 30", brand="Hermès (Dream)", category="bag",
-         price=12000.00, currency="USD",
-         image_url="https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
-         buy_url="https://hermes.com"),
-    dict(name="Top Handle Structured Bag", brand="H&M (Steal)", category="bag",
-         price=39.99, currency="USD",
-         image_url="https://images.unsplash.com/photo-1591561954557-26941169b49e?auto=format&fit=crop&w=800&q=80",
-         buy_url="https://hm.com"),
-    dict(name="Balenciaga Triple S", brand="Balenciaga (Dream)", category="sneaker",
-         price=1150.00, currency="USD",
-         image_url="https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?auto=format&fit=crop&w=800&q=80",
-         buy_url="https://balenciaga.com"),
-    dict(name="Chunky Sole Dad Sneaker", brand="ASOS Design (Steal)", category="sneaker",
-         price=45.00, currency="USD",
-         image_url="https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=800&q=80",
-         buy_url="https://asos.com"),
-]
+SAMPLES = []
 
 def main():
     engine = _build_engine()
